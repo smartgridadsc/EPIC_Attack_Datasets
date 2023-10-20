@@ -1,4 +1,5 @@
 # PowerBert_EPIC
+This repository contains MiTM scripts for attacking generator synchronization and reverse power prevention operations in EPIC [1]. The attack datasets can be downloaded from this link: https://uofi.box.com/v/EPIC-dataset.
 
 ## Dependencies
 Python libraries:
@@ -39,3 +40,5 @@ ip-utils
 5) FDIA4: Set GEN2_P_Negative to True. Then set VSD2 speed to some value < 7500. This causes the generator to output negative power very quickly and eventually will cause the plant to trip. 
 6) TDA2: Set GEN2_P_Negative to True. Then delay setting of VSD2 speed to 1500.2 (as specified by reverse power logic). This causes the generator to slowly decrease its power output till it supplies negative power and eventually will also cause the plant to trip. 
 
+## References
+[1] https://itrust.sutd.edu.sg/testbeds/electric-power-intelligent-control-epic/

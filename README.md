@@ -1,4 +1,4 @@
-# PowerBert_EPIC
+# EPIC_Attack_Datasets
 This repository contains MiTM scripts for attacking generator synchronization and reverse power prevention operations in EPIC [1]. The attack datasets can be downloaded from this link: https://uofi.box.com/v/EPIC-dataset.
 
 ## Dependencies

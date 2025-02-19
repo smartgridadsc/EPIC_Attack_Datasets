@@ -1,6 +1,11 @@
 # EPIC_Attack_Datasets
 This repository contains MiTM scripts for attacking generator synchronization and reverse power prevention operations in EPIC [1]. The attack datasets can be downloaded from this link: https://uofi.box.com/v/EPIC-dataset.
 
+NOTE:
+
+- powerbert_robustness_eval_experiment3_train_autoencoder_all_fdiatda.ipynb is used to generate dataset_A.csv
+- powerbert_robustness_eval_experiment3_train_autoencoder_all_10features.ipynb is used to generate dataset_B.csv
+
 ## Dependencies
 Python libraries:
 netfilterqueue

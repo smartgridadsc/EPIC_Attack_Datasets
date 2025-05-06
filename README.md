@@ -1,5 +1,5 @@
 # EPIC_Attack_Datasets
-This repository contains MiTM scripts for attacking generator synchronization and reverse power prevention operations in EPIC [1]. 
+This repository contains MiTM scripts for attacking generator synchronization and reverse power prevention operations in EPIC [1]. The datasets from the attack experiments are in the respective EPICA_Dataset and EPICB_Dataset folders.
 
 ## Dependencies
 Python libraries:

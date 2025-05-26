@@ -42,3 +42,13 @@ ip-utils
 
 ## References
 [1] https://itrust.sutd.edu.sg/testbeds/electric-power-intelligent-control-epic/
+
+## Citation
+@inproceedings{tan2024high,
+  title={High-fidelity Intrusion Detection Datasets for Smart Grid Cybersecurity Research},
+  author={Tan, Heng Chuan and Hossain, Md Adeeb and Mashima, Daisuke and Kalbarczyk, Zbigniew},
+  booktitle={2024 IEEE International Conference on Communications, Control, and Computing Technologies for Smart Grids (SmartGridComm)},
+  pages={340--346},
+  year={2024},
+  organization={IEEE}
+}
